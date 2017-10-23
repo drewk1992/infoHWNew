@@ -1,10 +1,6 @@
-title: "R Notebook"
+title: "Lab3"
 output: html_notebook
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r}
 install.packages("ggplot2")
@@ -44,5 +40,17 @@ head(picdataframe,3)
 picdataframe <- plyr::mutate(picdataframe,channel=factor(cc,labels=c('R','G','B')))
 ggplot(picdataframe,aes(value,col=channel))+geom_histogram(bins=30)+facet_wrap(~ channel)
 ```
+Plot equlaized image
+```{r}
+hist.eq <- function(im) as.cimg(ecdf(im)(im),dim=dim(im))
+split <- imsplit(im,"c")
+split
+split.eq <- llply(split,hist.eq)
+imappend(split.eq,"c") %>% plot(main="3 channel Hist Equalization")
+```
 
 …
+```{r}
+im.g <- grayscale(im)
+imgradient(im.g,"xy") %>% enorm %>% plot(main="Gradient magnitude")
+```
