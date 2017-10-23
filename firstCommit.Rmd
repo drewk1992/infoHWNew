@@ -20,22 +20,26 @@ library(imager)
 Cont.
 
 ```{r}
-im <- load.image("C://Users//andrew//Pictures//DJI_0004.png")
+im <- load.image("D://Users//drewk1992//Documents//UGA//Thesis//Pictures//DJI_0004.jpg")
 bdf <- as.data.frame(im)
 head(bdf,3)
+plot(im)
 ```
+Get info on image
 ```{r}
 dim(im)
 ```
+create a histogram for each color channels rgb value frequency
+
 ```{r}
 R(im) %>% hist(main="Red channel values in mine picture");G(im) %>% hist(main="Red channel values in mine picture");B(im) %>% hist(main="Red channel values in mine picture")
 ```
-
+Create a data frame to store pic in and create header for df and plot it
 ```{r}
 picdataframe <- as.data.frame(im)
 head(picdataframe,3)
 ```
-
+ use picture data frame with gg plot to create 3 histograms for each channels pixel freq
 ```{r}
 picdataframe <- plyr::mutate(picdataframe,channel=factor(cc,labels=c('R','G','B')))
 ggplot(picdataframe,aes(value,col=channel))+geom_histogram(bins=30)+facet_wrap(~ channel)
