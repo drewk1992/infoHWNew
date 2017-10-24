@@ -71,7 +71,7 @@ df <- as.data.frame(lab) %>% subset(value>0)
 head(df,3)
 ```
 
- 
+ Calculate center
  
 ```{r}
 centers <- ddply(df,.(value),summarise,mx=mean(x),my=mean(y))
@@ -80,7 +80,7 @@ centers <- ddply(df,.(value),summarise,mx=mean(x),my=mean(y))
 plot(im)
 with(centers,points(mx,my,col="red"))
 ```
-
+Blob detection using multi scalular aproach
 ```{r}
 hessdet <- function(im,scale=1) isoblur(im,scale) %>% imhessian %$% { scale^2*(xx*yy - xy^2) }
 dat <- ldply(c(2,3,4),function(scale) hessdet(im,scale) %>% as.data.frame %>% mutate(scale=scale))
@@ -93,18 +93,35 @@ scales <- seq(2,20,l=10)
 d.max <- llply(scales,function(scale) hessdet(im,scale)) %>% parmax
 plot(d.max,main="Point-wise maximum across scales")
 ```
-
+Calculate the max across the multiple scales
 ```{r}
 i.max <- llply(scales,function(scale) hessdet(im,scale)) %>% which.parmax
 plot(i.max,main="Index of the point-wise maximum \n across scales")
 ```
-```{r}
+Use ggplot to plot the grey scale imagery plus the mean centers with triangles over top of them (size of the triangle indicates how many times the center was picked up in the multi scale analysis)
 
-labs <- d.max %>% threshold("96%") %>% label %>% as.data.frame
-#Add scale indices
+```{r}
+labs <- d.max %>% threshold("99.9%") %>% label %>% as.data.frame
 labs <- mutate(labs,index=as.data.frame(i.max)$value)
 regs <- dplyr::group_by(labs,value) %>% dplyr::summarise(mx=mean(x),my=mean(y),scale.index=mean(index))
 p <- ggplot(as.data.frame(im),aes(x,y))+geom_raster(aes(fill=value))+geom_point(data=regs,aes(mx,my,size=scale.index),pch=2,col="red")
 p+scale_fill_gradient(low="black",high="white")+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
+```
+
+
+Now to work on image gradient
+
+load image as a image gradient image and convert to dataframe
+```{r}
+grad <- imgradient(im,"xy")
+names(grad) <- c("dx","dy")
+dfgr <- as.data.frame(grad)
+head(dfgr)
+```
+
+Recomended for ggplot defaults
+```{r}
+install.packages("cowplot")
+library(cowplot)
 ```
 
