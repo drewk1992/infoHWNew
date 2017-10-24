@@ -9,6 +9,10 @@ install.packages("dplyr")
 library(dplyr)
 install.packages("imager")
 library(imager)
+install.packages("cowplot")
+library(cowplot)
+install.packages("tidyr")
+library(tidyr)
 ```
 
 ```{r}
@@ -107,21 +111,27 @@ regs <- dplyr::group_by(labs,value) %>% dplyr::summarise(mx=mean(x),my=mean(y),s
 p <- ggplot(as.data.frame(im),aes(x,y))+geom_raster(aes(fill=value))+geom_point(data=regs,aes(mx,my,size=scale.index),pch=2,col="red")
 p+scale_fill_gradient(low="black",high="white")+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
 ```
-
-
-Now to work on image gradient
-
-load image as a image gradient image and convert to dataframe
+easier than scrolling up
 ```{r}
-grad <- imgradient(im,"xy")
-names(grad) <- c("dx","dy")
-dfgr <- as.data.frame(grad)
-head(dfgr)
+plot(im)
 ```
 
-Recomended for ggplot defaults
 ```{r}
-install.packages("cowplot")
-library(cowplot)
+im
+d <- as.data.frame(im)
+m <- sample_n(d,1e4) %>% lm(value ~ x*y,data=.) 
+im.c <- im-predict(m,d)
+out <- threshold(im.c)
+plot(out)
+```
+```{r}
+imblur<-grayscale(isoblur(im,5, gaussian =TRUE))
+plot(imblur)
+plot(im)
+
+```
+
+```{r}
+threshold(imblur) %>% plot
 ```
 
