@@ -5,6 +5,8 @@ output: html_notebook
 ```{r}
 install.packages("ggplot2")
 library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
 ```
 
 install packages
@@ -16,7 +18,7 @@ library(imager)
 Cont.
 
 ```{r}
-im <- load.image("D://Users//drewk1992//Documents//UGA//Thesis//Pictures//DJI_0004.jpg")
+im <- load.image("D://Users//drewk1992//Documents//UGA//Thesis//Pictures//lab3Test.png")
 bdf <- as.data.frame(im)
 head(bdf,3)
 plot(im)
@@ -49,8 +51,66 @@ split.eq <- llply(split,hist.eq)
 imappend(split.eq,"c") %>% plot(main="3 channel Hist Equalization")
 ```
 
+Perform Image Gradient Magnitude analysis
 …
 ```{r}
 im.g <- grayscale(im)
 imgradient(im.g,"xy") %>% enorm %>% plot(main="Gradient magnitude")
 ```
+```{r}
+imhessian(im.g)
+```
+```{r}
+Hdet <- with(imhessian(im),(xx*yy - xy^2))
+plot(Hdet,main="Determinant of Hessian")
+```
+```{r}
+threshold(Hdet,"99%") %>% plot(main="Determinant: 1% highest values")
+```
+
+```{r}
+lab <- threshold(Hdet,"99%") %>% label
+plot(lab,main="Labelled regions")
+```
+```{r}
+df <- as.data.frame(lab) %>% subset(value>0)
+head(df,3)
+```
+
+ 
+ 
+```{r}
+centers <- ddply(df,.(value),summarise,mx=mean(x),my=mean(y))
+```
+```{r}
+plot(im)
+with(centers,points(mx,my,col="red"))
+```
+
+```{r}
+hessdet <- function(im,scale=1) isoblur(im,scale) %>% imhessian %$% { scale^2*(xx*yy - xy^2) }
+dat <- ldply(c(2,3,4),function(scale) hessdet(im,scale) %>% as.data.frame %>% mutate(scale=scale))
+p <- ggplot(dat,aes(x,y))+geom_raster(aes(fill=value))+facet_wrap(~ scale)
+p+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
+```
+```{r}
+scales <- seq(2,20,l=10)
+
+d.max <- llply(scales,function(scale) hessdet(im,scale)) %>% parmax
+plot(d.max,main="Point-wise maximum across scales")
+```
+
+```{r}
+i.max <- llply(scales,function(scale) hessdet(im,scale)) %>% which.parmax
+plot(i.max,main="Index of the point-wise maximum \n across scales")
+```
+```{r}
+
+labs <- d.max %>% threshold("96%") %>% label %>% as.data.frame
+#Add scale indices
+labs <- mutate(labs,index=as.data.frame(i.max)$value)
+regs <- dplyr::group_by(labs,value) %>% dplyr::summarise(mx=mean(x),my=mean(y),scale.index=mean(index))
+p <- ggplot(as.data.frame(im),aes(x,y))+geom_raster(aes(fill=value))+geom_point(data=regs,aes(mx,my,size=scale.index),pch=2,col="red")
+p+scale_fill_gradient(low="black",high="white")+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
+```
+
