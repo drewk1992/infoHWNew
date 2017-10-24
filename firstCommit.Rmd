@@ -1,21 +1,15 @@
 title: "Lab3"
 output: html_notebook
 ---
-
+install packages
 ```{r}
 install.packages("ggplot2")
 library(ggplot2)
 install.packages("dplyr")
 library(dplyr)
-```
-
-install packages
-
-```{r}
 install.packages("imager")
 library(imager)
 ```
-Cont.
 
 ```{r}
 im <- load.image("D://Users//drewk1992//Documents//UGA//Thesis//Pictures//lab3Test.png")
