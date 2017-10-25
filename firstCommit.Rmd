@@ -28,7 +28,7 @@ dim(im)
 create a histogram for each color channels rgb value frequency
 
 ```{r}
-R(im) %>% hist(main="Red channel values in mine picture");G(im) %>% hist(main="Red channel values in mine picture");B(im) %>% hist(main="Red channel values in mine picture")
+R(im) %>% hist(main="Red Band values Frequency in Test Image");G(im) %>% hist(main="Green Band values Frequency in Test Image");B(im) %>% hist(main="Blue Band values Frequency in Test Image")
 ```
 Create a data frame to store pic in and create header for df and plot it
 ```{r}
@@ -37,8 +37,8 @@ head(picdataframe,3)
 ```
  use picture data frame with gg plot to create 3 histograms for each channels pixel freq
 ```{r}
-picdataframe <- plyr::mutate(picdataframe,channel=factor(cc,labels=c('R','G','B')))
-ggplot(picdataframe,aes(value,col=channel))+geom_histogram(bins=30)+facet_wrap(~ channel)
+picdataframe <- plyr::mutate(picdataframe,channel=factor(cc,labels=c('Red','Green','Blue')))
+ggplot(picdataframe,aes(value,col=channel))+geom_histogram(bins=45)+facet_wrap(~ channel)
 ```
 Plot equlaized image
 ```{r}
@@ -46,30 +46,35 @@ hist.eq <- function(im) as.cimg(ecdf(im)(im),dim=dim(im))
 split <- imsplit(im,"c")
 split
 split.eq <- llply(split,hist.eq)
-imappend(split.eq,"c") %>% plot(main="3 channel Hist Equalization")
+imappend(split.eq,"c") %>% plot(main="3 channel Hist Equalization using Empricial Cumulative Distribution Function")
 ```
 
 Perform Image Gradient Magnitude analysis
-…
 ```{r}
 im.g <- grayscale(im)
 imgradient(im.g,"xy") %>% enorm %>% plot(main="Gradient magnitude")
+im.g
 ```
+Calculating Hessian values using Image gradient
 ```{r}
 imhessian(im.g)
 ```
+Determine Determinat of Hessian matrix
 ```{r}
 Hdet <- with(imhessian(im),(xx*yy - xy^2))
 plot(Hdet,main="Determinant of Hessian")
 ```
+Map the top 1% of Determinant values (high change areas)
 ```{r}
 threshold(Hdet,"99%") %>% plot(main="Determinant: 1% highest values")
 ```
-
+For programs sake label regions
 ```{r}
 lab <- threshold(Hdet,"99%") %>% label
-plot(lab,main="Labelled regions")
+plot(lab,main="Labeled regions")
 ```
+Convert to a df, plot df
+
 ```{r}
 df <- as.data.frame(lab) %>% subset(value>0)
 head(df,3)
@@ -85,24 +90,27 @@ plot(im)
 with(centers,points(mx,my,col="red"))
 ```
 Blob detection using multi scalular aproach
+  1- blur images to reduce noise
+  2- Determine Hessian values at different zoome levels(scale)
+  3- Plot deteriment values for each scale using gg plot
 ```{r}
 hessdet <- function(im,scale=1) isoblur(im,scale) %>% imhessian %$% { scale^2*(xx*yy - xy^2) }
-dat <- ldply(c(2,3,4),function(scale) hessdet(im,scale) %>% as.data.frame %>% mutate(scale=scale))
+dat <- ldply(c(5,3,4),function(scale) hessdet(im,scale) %>% as.data.frame %>% mutate(scale=scale))
 p <- ggplot(dat,aes(x,y))+geom_raster(aes(fill=value))+facet_wrap(~ scale)
 p+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
 ```
 ```{r}
 scales <- seq(2,20,l=10)
-
 d.max <- llply(scales,function(scale) hessdet(im,scale)) %>% parmax
 plot(d.max,main="Point-wise maximum across scales")
 ```
 Calculate the max across the multiple scales
+plot results of max hessian value colored by scale
 ```{r}
 i.max <- llply(scales,function(scale) hessdet(im,scale)) %>% which.parmax
-plot(i.max,main="Index of the point-wise maximum \n across scales")
+plot(i.max,main="Maximum Hessian Value across scales")
 ```
-Use ggplot to plot the grey scale imagery plus the mean centers with triangles over top of them (size of the triangle indicates how many times the center was picked up in the multi scale analysis)
+Use ggplot to plot the grey scale imagery plus the mean centers of highest .1% of hessian values  with triangles over top of them (size of the triangle indicates how many times the center was picked up in the multi scale analysis)
 
 ```{r}
 labs <- d.max %>% threshold("99.9%") %>% label %>% as.data.frame
