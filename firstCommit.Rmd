@@ -14,7 +14,7 @@ library(tidyr)
 install.packages("reshape2")
 library(reshape2)
 ```
-
+Load test image
 ```{r}
 im <- load.image("./lab3test.png")
 bdf <- as.data.frame(im)
@@ -40,7 +40,7 @@ head(picdataframe,3)
 picdataframe <- plyr::mutate(picdataframe,channel=factor(cc,labels=c('Red','Green','Blue')))
 ggplot(picdataframe,aes(value,col=channel))+geom_histogram(bins=45)+facet_wrap(~ channel)
 ```
-Plot equlaized image
+Plot equlaized image using Empricial Cumulative Distribution Function
 ```{r}
 hist.eq <- function(im) as.cimg(ecdf(im)(im),dim=dim(im))
 split <- imsplit(im,"c")
@@ -49,7 +49,7 @@ split.eq <- llply(split,hist.eq)
 imappend(split.eq,"c") %>% plot(main="3 channel Hist Equalization using Empricial Cumulative Distribution Function")
 ```
 
-Perform Image Gradient Magnitude analysis
+Perform Image Gradient Magnitude analysis using imageR function
 ```{r}
 im.g <- grayscale(im)
 imgradient(im.g,"xy") %>% enorm %>% plot(main="Gradient magnitude")
@@ -99,10 +99,12 @@ dat <- ldply(c(5,3,4),function(scale) hessdet(im,scale) %>% as.data.frame %>% mu
 p <- ggplot(dat,aes(x,y))+geom_raster(aes(fill=value))+facet_wrap(~ scale)
 p+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
 ```
+
+Combine these scales in to one function
 ```{r}
 scales <- seq(2,20,l=10)
 d.max <- llply(scales,function(scale) hessdet(im,scale)) %>% parmax
-plot(d.max,main="Point-wise maximum across scales")
+plot(d.max,main="Maximum Hessian across scales")
 ```
 Calculate the max across the multiple scales
 plot results of max hessian value colored by scale
@@ -120,31 +122,28 @@ p <- ggplot(as.data.frame(im),aes(x,y))+geom_raster(aes(fill=value))+geom_point(
 p+scale_fill_gradient(low="black",high="white")+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0),trans=scales::reverse_trans())
 ```
 
+Testing capabilities of spectral plots. In the future will be workint to gather spectral plots of pixels located by the local maximas within at least 2 scales
 ```{r}
-imrow(R(im),10) %>% plot(main="Red channel along 10th row",type="l")
+imrow(G(im),60) %>% plot(main="Green 60th row",type="l")
 ```
 
-
-easier than scrolling up
+Applying a smoothing threadhold based linear Model
 ```{r}
-plot(im)
-```
-
-```{r}
-im
 d <- as.data.frame(im)
 m <- sample_n(d,1e4) %>% lm(value ~ x*y,data=.) 
 im.c <- im-predict(m,d)
 out <- threshold(im.c)
 plot(out)
 ```
+testing Gaussian Blur effect
+
 ```{r}
 imblur<-grayscale(isoblur(im,5, gaussian =TRUE))
 plot(imblur)
 plot(im)
 
 ```
-
+Dividing image based on imageR threshold- not to usesful
 ```{r}
 threshold(imblur) %>% plot
 ```
