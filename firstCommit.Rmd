@@ -1,17 +1,12 @@
 title: "Lab3"
 output: html_notebook
 ---
-install packages
+install packages **Uncomment 
 ```{r}
-install.packages("ggplot2")
 library(ggplot2)
-install.packages("dplyr")
 library(dplyr)
-install.packages("imager")
 library(imager)
-install.packages("tidyr")
 library(tidyr)
-install.packages("reshape2")
 library(reshape2)
 ```
 Load test image
@@ -159,11 +154,8 @@ ggplot(data = bothDf, aes(x=WaveLength, y=Rrs_sim)) + geom_line(aes(y=Rrs_sim, c
 
 2nd attempt with data "melted" into long form
 ```{r}
-
 melted.both <- melt(bothDf, id="WaveLength")  # convert to long format
-melted.both
-
-ggplot(data=test_data_long,
+ggplot(data = melted.both,
        aes(x=WaveLength, y=value, colour=variable)) +
        geom_line()
 ```
