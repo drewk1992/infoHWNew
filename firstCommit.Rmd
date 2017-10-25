@@ -16,7 +16,7 @@ library(reshape2)
 ```
 
 ```{r}
-im <- load.image("D://Users//drewk1992//Documents//UGA//Thesis//Pictures//lab3Test.png")
+im <- load.image("./lab3test.png")
 bdf <- as.data.frame(im)
 head(bdf,3)
 plot(im)
@@ -148,16 +148,17 @@ plot(im)
 ```{r}
 threshold(imblur) %>% plot
 ```
-
+Playing with methods of plotting multiple spectral plots
+first attempt
 
 ```{r}
 
-both<-("H://Thesis//Data//SpectralScans//firstscantan1020//plots.csv")
+both<-("./plots.csv")
 bothDf<-read.csv(both)
 ggplot(data = bothDf, aes(x=WaveLength, y=Rrs_sim)) + geom_line(aes(y=Rrs_sim, colour=Rrs_sim)) +geom_line(aes(y=Rrs_lid, colour=Rrs_lid))
 ```
 
-
+2nd attempt with data "melted" into long form
 ```{r}
 
 melted.both <- melt(bothDf, id="WaveLength")  # convert to long format
