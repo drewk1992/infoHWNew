@@ -88,6 +88,7 @@ Blob detection using multi scalular aproach
   1- blur images to reduce noise
   2- Determine Hessian values at different zoome levels(scale)
   3- Plot deteriment values for each scale using gg plot
+  source-https://cran.r-project.org/web/packages/imager/vignettes/gettingstarted.html
 ```{r}
 hessdet <- function(im,scale=1) isoblur(im,scale) %>% imhessian %$% { scale^2*(xx*yy - xy^2) }
 dat <- ldply(c(5,3,4),function(scale) hessdet(im,scale) %>% as.data.frame %>% mutate(scale=scale))
